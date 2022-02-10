@@ -1,0 +1,1 @@
+#class Player: health, stash size, money,  # class Drugs: drugs, prices #title screen #instructions #class City #main screen with menu showing inv.. stash and current inv. #class LoanShark #class Police #random occurances #how long to win #
