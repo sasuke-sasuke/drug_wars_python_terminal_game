@@ -31,13 +31,15 @@ class Player:
                 self.debt = Cartel.interest_accumulation()
                 Cartel.loan_days += 1
 
-    def add_drugs_to_trench_coat(self, quantity):
+    def add_drugs_to_trench_coat(self, drug, quantity):
         if self.trench_coat > 0 + quantity:
             self.trench_coat -= quantity
+            self.drugs[drug] += quantity
 
-    def take_drugs_from_trench_coat(self, quantity):
+    def take_drugs_from_trench_coat(self, drug, quantity):
         if self.trench_coat <= 100 - quantity:
             self.trench_coat += quantity
+            self.drugs[drug] -= quantity
 
     def buy_drugs(self, drug, quantity, cost_per_quantity):
         if drug not in self.drugs.keys():
@@ -73,6 +75,18 @@ class Player:
         if amount <= self.bank:
             self.money += amount
             self.bank - + amount
+
+    def add_drugs_stash(self, drug, amount):
+        for key in self.drugs.keys():
+            if key == drug and self.drugs[drug] > 0 + amount:
+                self.take_drugs_from_trench_coat(amount)
+                self.stash[drug] += amount
+
+    def remove_drugs_stash(self, drug, amount):
+        for key in self.stash.keys():
+            if key == drug and self.stash[drug] > 0 + amount:
+                self.add_drugs_to_trench_coat(amount)
+                self.stash[drug] -= amount
 
 
 # drugs is a random price between min and max, prices change in different cities and on different days.
@@ -175,10 +189,10 @@ def instructions(instructions_choice):
 
 
 def game_menu(user):
-    while user.game_over == False:
-        print(
-            "\n     DATE: " + user.date + "                         TRENCH COAT POCKETS     " + str(user.trench_coat))
-        print("""
+
+    print(
+        "\n     DATE: " + user.date + "                         TRENCH COAT POCKETS     " + str(user.trench_coat))
+    print("""
  ==============================================================================
 ||       STASH       ||      WEST PALM BEACH     ||      TRENCH COAT         ||
 |=============================================================================|
@@ -193,10 +207,6 @@ def game_menu(user):
 |       DEBT                  """+str(user.debt)+""" ||      CASH                       """+str(user.money)+"""    |
  =============================================================================
             """)
-
-        input()
-        user.game_over = True
-    #print("Game over")
 
 
 def cartel(user, cartel):
@@ -216,6 +226,51 @@ def cartel(user, cartel):
             borrow_amount = 0
 
 
+def stash(user):
+    choice = input("\nDo you wish to transfer drugs to/from your stash? ")
+    if choice == "y":
+        drug = input("\nWhich drug do you want to transfer? ")
+        choice = input("\nAdd to stash or remove? (Pick add or remove) ")
+        if choice[0].lower() == "a":
+            if drug[0].lower() in ["c", "h", "a", "w", "s", "l"]:
+                amount = input("\nHow much do you wish to transfer? ")
+                try:
+                    amount = int(amount)
+                    user.add_drugs_stash(drug, amount)
+                except:
+                    print("\nNo changes to stash")
+        if choice[0] == "r":
+            amount = input("\nHow much do you want to remove? ")
+            try:
+                amount = int(amount)
+                user.remove_drugs_stash(drug, amount)
+            except:
+                print("\nNo changes made to stash")
+
+
+def bank(user):
+    choice = input("\nDo you wish to visit the bank? ")
+    if choice == "y":
+        choice = input("\nDo you want to deposit or withdrawl? ")
+        if choice[0].lower() == "d":
+            deposit_amount = input("How much do you wish to deposit? ")
+            try:
+                deposit_amount = int(deposit_amount)
+                user.deposit_money(deposit_amount)
+            except:
+                print("\nNo deposit made.")
+        if choice[0].lower() == "w":
+            withdrawl_amount = input("\nHow much do you wish to withdrawl? ")
+            try:
+                withdrawl_amount = int(withdrawl_amount)
+            except:
+                print("\nNo withdrawl made.")
+
+
+def drug_menu(user):
+    pass
+
+
 #######
 user = Player()
 wendy = Cartel()
@@ -223,5 +278,6 @@ wendy = Cartel()
 # instructions(choice)
 game_menu(user)
 cartel(user, wendy)
-user.game_over = False
+bank(user)
+#user.game_over = False
 game_menu(user)
