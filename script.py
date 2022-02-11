@@ -3,35 +3,51 @@ import random
 
 cities = ["West Palm Beach", "Boynton Beach",
           "Boca Raton", "Lake Worth", "Pahokee", "Belle Glade"]
+drugs_dict = {"cocaine": 0, "herion": 0,
+              "acid": 0, "weed": 0, "speed": 0, "ludes": 0}
 
 
 class Player:
+    day = 1
+    date = "Jan " + str(day) + ", 2022"
 
     def __init__(self):
         self.money = 2000
-        self.stash_size = 100
+        self.trench_coat = 100
         self.health = 100
-        self.drugs = {}
+        self.drugs = drugs_dict
+        self.stash = drugs_dict
         self.guns = 0
         self.bank = 0
-        self.debt = -5000
+        self.debt = -5500
         self.location = 0
         self.game_over = False
 
     def switch_location(self, new_location):
         if new_location != self.location:
             self.location = new_location
+            self.day += 1
+
+    def add_drugs_to_trench_coat(self, quantity):
+        if self.trench_coat > 0 + quantity:
+            self.trench_coat -= quantity
+
+    def take_drugs_from_trench_coat(self, quantity):
+        if self.trench_coat <= 100 - quantity:
+            self.trench_coat += quantity
 
     def buy_drugs(self, drug, quantity, cost_per_quantity):
         if drug not in self.drugs.keys():
             self.drugs[drug] = 0
         self.drugs[drug] += quantity
         self.money -= (cost_per_quantity * quantity)
+        self.add_drugs_to_trench_coat(quantity)
 
     def sell_drugs(self, drug, quantity, price_per_quantity):
         if self.drugs[drug] > 0:
             self.drugs[drug] -= quantity
             self.money += (quantity * price_per_quantity)
+            self.take_drugs_from_trench_coat(quantity)
 
     def take_damage(self, damage):
         if self.health > 0:
@@ -39,7 +55,7 @@ class Player:
             self.game_over()
 
     def game_over(self):
-        if self.health <= 0:
+        if self.health <= 0 or self.day == 32:
             self.game_over = True
 
 
@@ -99,9 +115,9 @@ def instructions(instructions_choice):
     if instructions_choice == 'n':
         return
     print("""\n
-    This is a game of buying, selling, and fighting. The object of the game is 
-    to pay off your debt to the Cartel. Then, make as much money as you 
-    can in a 1 month period. If you deal too heavily in drugs, you might 
+    This is a game of buying, selling, and fighting. The object of the game is
+    to pay off your debt to the Cartel. Then, make as much money as you
+    can in a 1 month period. If you deal too heavily in drugs, you might
     run into the police! Your main drug stash will be in West Palm Beach.
     The prices of drugs per unit are:
 
@@ -116,12 +132,33 @@ def instructions(instructions_choice):
     return
 
 
-def game_loop(user):
+def game_menu(user):
     while user.game_over == False:
-        pass
+        print(
+            "\n     DATE: " + user.date + "                         TRENCH COAT POCKETS     " + str(user.trench_coat))
+        print("""
+ ==============================================================================
+||       STASH       ||      WEST PALM BEACH     ||      TRENCH COAT         ||
+|=============================================================================|
+|       COCAINE                  """+str(user.stash["cocaine"])+""" ||      COCAINE                       """+str(user.drugs["cocaine"])+"""    |
+|       HERION                   """+str(user.stash["herion"])+""" ||      HERION                        """+str(user.drugs["herion"])+"""    |
+|       ACID                     """+str(user.stash["acid"])+""" ||      ACID                          """+str(user.drugs["acid"])+"""    |
+|       WEED                     """+str(user.stash["weed"])+""" ||      WEED                          """+str(user.drugs["weed"])+"""    |
+|       SPEED                    """+str(user.stash["speed"])+""" ||      SPEED                         """+str(user.drugs["speed"])+"""    |
+|       LUDES                    """+str(user.stash["ludes"])+""" ||      LUDES                         """+str(user.drugs["ludes"])+"""    |
+|                                  ||                                         |
+|       BANK                     """+str(user.bank) + """ ||      GUNS                          """+str(user.guns)+"""    |
+|       DEBT                 """+str(user.debt)+""" ||      CASH                       """+str(user.money)+"""    |
+ =============================================================================
+            """)
+
+        input()
+        user.game_over = True
+    print("Game over")
 
 
 #######
 user = Player()
-choice = title_screen()
-instructions(choice)
+# choice = title_screen()
+# instructions(choice)
+game_menu(user)
