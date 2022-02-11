@@ -9,7 +9,7 @@ drugs_dict = {"cocaine": 0, "herion": 0,
 
 class Player:
     day = 1
-    date = "Jan " + str(day) + ", 2022"
+    date = "Jan " + str(day) + ", 1984"
 
     def __init__(self):
         self.money = 2000
@@ -19,7 +19,7 @@ class Player:
         self.stash = drugs_dict
         self.guns = 0
         self.bank = 0
-        self.debt = -5500
+        self.debt = 5500
         self.location = 0
         self.game_over = False
 
@@ -27,6 +27,9 @@ class Player:
         if new_location != self.location:
             self.location = new_location
             self.day += 1
+            if self.debt > 0:
+                self.debt = Cartel.interest_accumulation()
+                Cartel.loan_days += 1
 
     def add_drugs_to_trench_coat(self, quantity):
         if self.trench_coat > 0 + quantity:
@@ -58,6 +61,19 @@ class Player:
         if self.health <= 0 or self.day == 32:
             self.game_over = True
 
+    def bought_gun(self, num_of_guns):
+        self.guns += num_of_guns
+
+    def deposit_money(self, amount):
+        if amount <= self.money:
+            self.bank += amount
+            self.money -= amount
+
+    def withdrawl_money(self, amount):
+        if amount <= self.bank:
+            self.money += amount
+            self.bank - + amount
+
 
 # drugs is a random price between min and max, prices change in different cities and on different days.
 class Drugs:
@@ -83,9 +99,34 @@ class City:
 
 
 class Cartel:
+    loan_days = 0
+    loan_days_max = 8
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
+        self.name = "Wendy Bryde"
+        self.loan_amount = 5500
+        self.loan_max = 250000
+        self.health = 100
+        self.interest = 0.20  # in percentage
+
+    def loan_money(self, user, loan_amount):
+        if self.loan_amount >= self.loan_max:
+            self.loan_amount += loan_amount
+            user.money += loan_amount
+            user.debt += loan_amount
+            self.loan_days += 1
+
+    def repay_loan(self, user, repay_amount):
+        if self.loan_amount <= 0:
+            self.loan_amount -= repay_amount
+            user.money -= repay_amount
+            user.debt -= repay_amount
+            if user.debt == 0:
+                self.loan_days = 0
+
+    def interest_accumulation(self):
+        if self.loan_amount > 0:
+            self.loan_amount += self.loan_amount * self.interest
 
 
 class Police:
@@ -93,6 +134,7 @@ class Police:
     def __init__(self, name):
         self.name = name
         self.deputies = random.randint(1, 9)
+        self.health = 100
 
 
 ############################
@@ -154,11 +196,31 @@ def game_menu(user):
 
         input()
         user.game_over = True
-    print("Game over")
+    #print("Game over")
+
+
+def cartel(user, cartel):
+    choice = input("\nDo you want to visit the Cartel(loan shark): ")
+    if choice == "y":
+        repay_amount = input("\nHow much do you want to repay? ")
+        try:
+            repay_amount = int(repay_amount)
+            if repay_amount == type(int):
+                cartel.repay_loan(user, repay_amount)
+        except:
+            repay_amount = 0
+    borrow_amount = input("\nHow much do you want to borrow? ")
+    try:
+        borrow_amount = int(borrow_amount)
+        if borrow_amount == type(int):
+            cartel.loan_money(user, borrow_amount)
+    except:
+        borrow_amount = 0
 
 
 #######
 user = Player()
-# choice = title_screen()
-# instructions(choice)
+wendy = Cartel()
+choice = title_screen()
+instructions(choice)
 game_menu(user)
