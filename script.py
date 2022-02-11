@@ -110,14 +110,14 @@ class Cartel:
         self.interest = 0.20  # in percentage
 
     def loan_money(self, user, loan_amount):
-        if self.loan_amount >= self.loan_max:
+        if self.loan_amount <= self.loan_max:
             self.loan_amount += loan_amount
             user.money += loan_amount
             user.debt += loan_amount
             self.loan_days += 1
 
     def repay_loan(self, user, repay_amount):
-        if self.loan_amount <= 0:
+        if self.loan_amount >= 0:
             self.loan_amount -= repay_amount
             user.money -= repay_amount
             user.debt -= repay_amount
@@ -190,7 +190,7 @@ def game_menu(user):
 |       LUDES                    """+str(user.stash["ludes"])+""" ||      LUDES                         """+str(user.drugs["ludes"])+"""    |
 |                                  ||                                         |
 |       BANK                     """+str(user.bank) + """ ||      GUNS                          """+str(user.guns)+"""    |
-|       DEBT                 """+str(user.debt)+""" ||      CASH                       """+str(user.money)+"""    |
+|       DEBT                  """+str(user.debt)+""" ||      CASH                       """+str(user.money)+"""    |
  =============================================================================
             """)
 
@@ -205,22 +205,23 @@ def cartel(user, cartel):
         repay_amount = input("\nHow much do you want to repay? ")
         try:
             repay_amount = int(repay_amount)
-            if repay_amount == type(int):
-                cartel.repay_loan(user, repay_amount)
+            cartel.repay_loan(user, repay_amount)
         except:
             repay_amount = 0
-    borrow_amount = input("\nHow much do you want to borrow? ")
-    try:
-        borrow_amount = int(borrow_amount)
-        if borrow_amount == type(int):
+        borrow_amount = input("\nHow much do you want to borrow? ")
+        try:
+            borrow_amount = int(borrow_amount)
             cartel.loan_money(user, borrow_amount)
-    except:
-        borrow_amount = 0
+        except:
+            borrow_amount = 0
 
 
 #######
 user = Player()
 wendy = Cartel()
-choice = title_screen()
-instructions(choice)
+#choice = title_screen()
+# instructions(choice)
+game_menu(user)
+cartel(user, wendy)
+user.game_over = False
 game_menu(user)
