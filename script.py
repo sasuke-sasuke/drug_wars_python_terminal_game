@@ -1,5 +1,7 @@
 #class Player: health, stash size, money,  # class Drugs: drugs, prices #title screen #instructions #class City #main screen with menu showing inv.. stash and current inv. #class LoanShark #class Police #random occurances #how long to win #
 from random import randrange, randint
+import pygame
+from pygame.locals import *
 
 cities = ["West Palm Beach", "Boynton Beach",
           "Boca Raton", "Lake Worth", "Pahokee", "Belle Glade"]
@@ -41,17 +43,21 @@ class Player:
             #self.drugs[drug] -= quantity
 
     def buy_drugs(self, drug, quantity, cost_per_quantity):
-        if drug not in self.drugs.keys():
-            self.drugs[drug] = 0
-        self.drugs[drug] += quantity
-        self.money -= (cost_per_quantity * quantity)
-        self.add_drugs_to_trench_coat(quantity)
+        if self.money >= quantity * cost_per_quantity:
+            if drug not in self.drugs.keys():
+                self.drugs[drug] = 0
+            if quantity <= self.trench_coat:
+                self.drugs[drug] += quantity
+                self.money -= (cost_per_quantity * quantity)
+                self.add_drugs_to_trench_coat(drug, quantity)
+            else:
+                print("\nNo trench coat space")
 
     def sell_drugs(self, drug, quantity, price_per_quantity):
-        if self.drugs[drug] > 0:
+        if self.drugs[drug] >= quantity:
             self.drugs[drug] -= quantity
             self.money += (quantity * price_per_quantity)
-            self.take_drugs_from_trench_coat(quantity)
+            self.take_drugs_from_trench_coat(drug, quantity)
 
     def take_damage(self, damage):
         if self.health > 0:
@@ -77,13 +83,13 @@ class Player:
 
     def add_drugs_stash(self, drug, amount):
         for key in self.drugs.keys():
-            if key == drug and self.drugs[drug] > 0 + amount:
+            if key == drug:
                 self.take_drugs_from_trench_coat(amount)
                 self.stash[drug] += amount
 
     def remove_drugs_stash(self, drug, amount):
         for key in self.stash.keys():
-            if key == drug and self.stash[drug] > 0 + amount:
+            if key == drug and self.stash[drug] > amount:
                 self.add_drugs_to_trench_coat(amount)
                 self.stash[drug] -= amount
 
@@ -144,7 +150,7 @@ class Cartel:
         self.loan_amount = 5500
         self.loan_max = 250000
         self.health = 100
-        self.interest = 0.20  # in percentage
+        self.interest = 0.10  # in percentage
 
     def loan_money(self, user, loan_amount):
         if self.loan_amount <= self.loan_max:
@@ -208,8 +214,11 @@ def instructions(instructions_choice):
             Speed           70 - 250
             Ludes           10 - 60
     \n""")
-    input("(Hit Any Key To Start Game)")
-    return
+    print("(Hit Any Key To Start Game)")
+    while 1:
+        for event in pygame.event.get():
+            if event.type == pygame.KEYDOWN:
+                return
 
 
 def game_menu(user):
@@ -234,61 +243,120 @@ def game_menu(user):
 
 
 def cartel(user, cartel):
-    choice = input("\nDo you want to visit the Cartel(loan shark): ")
-    if choice == "y":
-        repay_amount = input("\nHow much do you want to repay? ")
-        try:
-            repay_amount = int(repay_amount)
-            cartel.repay_loan(user, repay_amount)
-        except:
-            repay_amount = 0
-        borrow_amount = input("\nHow much do you want to borrow? ")
-        try:
-            borrow_amount = int(borrow_amount)
-            cartel.loan_money(user, borrow_amount)
-        except:
-            borrow_amount = 0
+    print("\nDo you want to visit the Cartel(loan shark): ")
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_y:
+                    repay_amount = input("\nHow much do you want to repay? ")
+                    try:
+                        repay_amount = int(repay_amount)
+                        cartel.repay_loan(user, repay_amount)
+                    except:
+                        repay_amount = 0
+                    borrow_amount = input("\nHow much do you want to borrow? ")
+                    try:
+                        borrow_amount = int(borrow_amount)
+                        cartel.loan_money(user, borrow_amount)
+                        running = False
+                    except:
+                        borrow_amount = 0
+                if event.key != K_y:
+                    running = False
+
+
+def drug_input():
+    drug = ""
+    while 1:
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_c:
+                    drug = "cocaine"
+                elif event.key == K_h:
+                    drug = "herion"
+                elif event.key == K_a:
+                    drug = "acid"
+                elif event.key == K_w:
+                    drug = "weed"
+                elif event.key == K_s:
+                    drug = "speed"
+                elif event.key == K_l:
+                    drug = "ludes"
+        return drug
 
 
 def stash(user):
-    choice = input("\nDo you wish to transfer drugs to/from your stash? ")
-    if choice == "y":
-        drug = input("\nWhich drug do you want to transfer? ")
-        choice = input("\nAdd to stash or remove? (Pick add or remove) ")
-        if choice[0].lower() == "a":
-            if drug[0].lower() in ["c", "h", "a", "w", "s", "l"]:
-                amount = input("\nHow much do you wish to transfer? ")
-                try:
-                    amount = int(amount)
-                    user.add_drugs_stash(drug, amount)
-                except:
-                    print("\nNo changes to stash")
-        if choice[0] == "r":
-            amount = input("\nHow much do you want to remove? ")
-            try:
-                amount = int(amount)
-                user.remove_drugs_stash(drug, amount)
-            except:
-                print("\nNo changes made to stash")
+    running = True
+    drug = ""
+    print("\nDo you wish to transfer drugs to/from your stash? ")
+    while running:
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_n:
+                    running = False
+                if event.key == K_RETURN:
+                    running = False
+                if event.key == K_y:
+                    print("\nWhich drug do you want to transfer? ")
+                    while drug == "":
+                        drug = drug_input()
+                    if drug[0] in ["c", "h", "a", "w", "s", "l"]:
+                        print(
+                            "\nDo you wish to add or remove {drug}".format(drug=drug))
+                if event.key == K_a:
+                    amount = input(
+                        "\nHow much {drug} do you wish to transfer? ".format(drug=drug))
+                    try:
+                        amount = int(amount)
+                        if amount > 0 and amount > user.drugs[drug]:
+                            user.add_drugs_stash(drug, amount)
+                            running = False
+                    except:
+                        print("\nNo changes to stash")
+                        running = False
+                if event.key == K_r:
+                    amount = input(
+                        "\nHow much {drug} do you want to remove? ".format(drug=drug))
+                    try:
+                        amount = int(amount)
+                        if amount > user.stash[drug]:
+                            user.remove_drugs_stash(drug, amount)
+                            running = False
+                    except:
+                        print("\nNo changes made to stash")
+                        running = False
 
 
 def bank(user):
-    choice = input("\nDo you wish to visit the bank? ")
-    if choice == "y":
-        choice = input("\nDo you want to deposit or withdrawl? ")
-        if choice[0].lower() == "d":
-            deposit_amount = input("How much do you wish to deposit? ")
-            try:
-                deposit_amount = int(deposit_amount)
-                user.deposit_money(deposit_amount)
-            except:
-                print("\nNo deposit made.")
-        if choice[0].lower() == "w":
-            withdrawl_amount = input("\nHow much do you wish to withdrawl? ")
-            try:
-                withdrawl_amount = int(withdrawl_amount)
-            except:
-                print("\nNo withdrawl made.")
+    running = True
+    print("\nDo you wish to visit the bank? ")
+    while running:
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_n or event.key == K_RETURN:
+                    running = False
+                if event.key == K_y:
+                    print("\nDo you want to deposit or withdrawl? ")
+                if event.key == K_d:
+                    deposit_amount = input(
+                        "\nHow much do you want to deposit? ")
+                    try:
+                        deposit_amount = int(deposit_amount)
+                        user.deposit_money(deposit_amount)
+                        running = False
+                    except:
+                        print("\nNo deposit made.")
+                        running = False
+                if event.key == K_w:
+                    withdrawl_amount = input(
+                        "\nHow much do you want to withdrawl? ")
+                    try:
+                        withdrawl_amount = int(withdrawl_amount)
+                        running = False
+                    except:
+                        print("\nNo withdrawl made.")
+                        running = False
 
 # inputs player class as user and drug class as drugs
 
@@ -307,40 +375,66 @@ def drug_menu(user, drugs, cartel):
                     ACID        {acid}              LUDES   {ludes}
     """.format(cocaine=cocaine, weed=weed, herion=herion, speed=speed, acid=acid, ludes=ludes))
 
-    choice = input("\nWill you buy, sell or jet? ")
-    while choice[0].lower() not in ['b', 's', 'j']:
-        choice = input("\nWill you buy, sell, or jet?(pick 'b', 's' or 'j') ")
-    if choice[0].lower() == 'b':
-        drug = input("\nWhat will you buy? ")
+    print("\nWill you buy, sell or jet? ")
+    running = True
+    while running:
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_b:
+                    print("\nWhat will you buy? ")
+                    drug = ""
+                    while drug == "":
+                        drug = drug_input()
+                    amount = input("\n How much {drug} will you buy?(Can afford {afford}) ".format(
+                        drug=drug, afford=int(user.money / drugs.prices_in_city[drug])))
+                    amount = int(amount)
+                    user.buy_drugs(
+                        drug, amount, drugs.prices_in_city[drug])
+                    game_menu(user)
+                    print("\nWill you buy, sell or jet? ")
+                if event.key == K_s:
+                    print("\nWhat will you sell? ")
+                    drug = ""
+                    while drug == "":
+                        drug = drug_input()
+                    amount = int(
+                        input("\nHow much {drug} you sell? ".format(drug=drug)))
+                    user.sell_drugs(
+                        drug, amount, drugs.prices_in_city[drug])
+                    game_menu(user)
+                    print("\nWill you buy, sell or jet? ")
 
-        amount = input("\n How much {drug} will you buy?(Can afford {afford}) ".format(
-            drug=drug, afford=int(user.money / drugs.prices_in_city[drug])))
-        try:
-            amount = int(amount)
-            user.buy_drugs(drug, amount, drugs.prices_in_city[drug])
-        except:
-            print("\nNo transaction made")
+                if event.key == K_j:
+                    print("""\n
+    Where to dude:      1) West Palm Beach      2) Boynton Beach        3) Boca Raton
+    (Select 1 - 6)      4) Lake Worth           5) Pahokee              6) Belle Glade       
+                    """)
+                    travel = -1
+                    while travel == -1:
+                        travel = travel_to()
+                    new_city = cities[travel]
+                    user.switch_location(new_city, drugs, cartel)
+                    running = False
 
-    if choice[0].lower() == 's':
-        drug = input("\nWhat will you sell? ")
 
-        amount = int(input("\nHow much {drug} you sell? ".format(drug=drug)))
-        try:
-            user.sell_drugs(drug, amount, drugs.prices_in_city[drug])
-        except:
-            print("\nNo sale was made")
-    if choice[0].lower() == 'j':
-        print("""\n
-Where to dude:      1) West Palm Beach      2) Boynton Beach        3) Boca Raton
-(Select 1 - 6)      4) Lake Worth           5) Pahokee              6) Belle Glade       
-        """)
-        travel = int(input("\nWhere do you want to go? "))
-        new_city = cities[travel - 1]
-        user.switch_location(new_city, drugs, cartel)
-        print(user.day)
-        print(user.trench_coat)
-    else:
-        pass
+def travel_to():
+    while 1:
+        travel = -1
+        for event in pygame.event.get():
+            if event.type == KEYDOWN:
+                if event.key == K_1:
+                    travel = 0
+                if event.key == K_2:
+                    travel = 1
+                if event.key == K_3:
+                    travel = 2
+                if event.key == K_4:
+                    travel = 3
+                if event.key == K_5:
+                    travel = 4
+                if event.key == K_6:
+                    travel = 5
+        return travel
 
 
 def game(user, drugs, loan_shark):
@@ -362,23 +456,13 @@ def game(user, drugs, loan_shark):
             already_visited = False
 
 
-# Instantiate player, cartel and drugs
+# Instantiate player, cartel, drugs, pygame
 user = Player()
 wendy = Cartel()
 drugs = Drugs("West Palm Beach")
 drugs.cities_drug_prices()
+pygame.init()
 #####################################
 
-game(user, drugs, wendy)
 
-#choice = title_screen()
-# instructions(choice)
-# game_menu(user)
-# stash(user)
-# bank(user)
-#user.game_over = False
-# game_menu(user)
-#drug_menu(user, drugs)
-# game_menu(user)
-#drug_menu(user, drugs)
-# print(drugs.prices_in_city)
+game(user, drugs, wendy)
