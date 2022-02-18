@@ -175,10 +175,17 @@ class Cartel:
 
 class Police:
 
-    def __init__(self, name):
-        self.name = name
+    def __init__(self):
+        self.name = "Hardass"
         self.deputies = randint(1, 9)
         self.health = 100
+        self.aggressive = 10
+
+    def popo_attack(self, user):
+        user.health -= 10
+
+    def stopped_suspect(self, user):
+        pass
 
 
 ############################
@@ -358,10 +365,8 @@ def bank(user):
                         print("\nNo withdrawl made.")
                         running = False
 
-# inputs player class as user and drug class as drugs
 
-
-def drug_menu(user, drugs, cartel):
+def drug_price_menu():
     cocaine = drugs.prices_in_city["cocaine"]
     herion = drugs.prices_in_city["herion"]
     acid = drugs.prices_in_city["acid"]
@@ -375,6 +380,11 @@ def drug_menu(user, drugs, cartel):
                     ACID        {acid}              LUDES   {ludes}
     """.format(cocaine=cocaine, weed=weed, herion=herion, speed=speed, acid=acid, ludes=ludes))
 
+# inputs player class as user and drug class as drugs
+
+
+def drug_menu(user, drugs, cartel):
+    drug_price_menu()
     print("\nWill you buy, sell or jet? ")
     running = True
     while running:
@@ -391,6 +401,7 @@ def drug_menu(user, drugs, cartel):
                     user.buy_drugs(
                         drug, amount, drugs.prices_in_city[drug])
                     game_menu(user)
+                    drug_price_menu()
                     print("\nWill you buy, sell or jet? ")
                 if event.key == K_s:
                     print("\nWhat will you sell? ")
@@ -402,6 +413,7 @@ def drug_menu(user, drugs, cartel):
                     user.sell_drugs(
                         drug, amount, drugs.prices_in_city[drug])
                     game_menu(user)
+                    drug_price_menu()
                     print("\nWill you buy, sell or jet? ")
 
                 if event.key == K_j:
