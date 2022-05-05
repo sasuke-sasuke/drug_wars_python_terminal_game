@@ -177,9 +177,12 @@ class Police:
 
     def __init__(self):
         self.name = "Hardass"
-        self.deputies = randint(1, 9)
+        self.deputies = 0
         self.health = 100
         self.aggressive = 10
+
+    def num_deputy(self):
+        self.deputies = randrange(1, 10)
 
     def popo_attack(self, user):
         user.health -= 10
